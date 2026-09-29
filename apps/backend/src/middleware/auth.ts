@@ -1,13 +1,33 @@
 import { Request, Response, NextFunction } from 'express';
 import { logger } from '../utils/logger';
+import { prisma } from '../db/prisma';
 
 /**
  * Authentication middleware.
- * Checks if the user is authenticated via Passport session.
+ * Checks if the user is authenticated via Passport session OR Bearer token.
  */
-export function requireAuth(req: Request, res: Response, next: NextFunction): void {
+export async function requireAuth(req: Request, res: Response, next: NextFunction): Promise<void> {
   if (req.isAuthenticated && req.isAuthenticated() && req.user) {
     return next();
+  }
+
+  // Fallback for browsers blocking cross-domain 3rd party cookies: check Bearer token
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring(7).trim();
+    if (token) {
+      try {
+        const user = await prisma.user.findUnique({
+          where: { id: token },
+        });
+        if (user) {
+          req.user = user;
+          return next();
+        }
+      } catch (err) {
+        logger.warn({ err }, 'Failed to verify Bearer token');
+      }
+    }
   }
 
   res.status(401).json({

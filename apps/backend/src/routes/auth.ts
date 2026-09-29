@@ -20,9 +20,11 @@ router.get(
   passport.authenticate('google', {
     failureRedirect: `${config.frontend.url}/login?error=auth_failed`,
   }),
-  (_req, res) => {
+  (req, res) => {
     // Successful authentication
-    res.redirect(`${config.frontend.url}/dashboard`);
+    const user = req.user as any;
+    const tokenParam = user?.id ? `?token=${encodeURIComponent(user.id)}` : '';
+    res.redirect(`${config.frontend.url}/dashboard${tokenParam}`);
   },
 );
 

@@ -34,11 +34,20 @@ function DashboardContent() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
+    const token = searchParams.get('token');
+    if (token && typeof window !== 'undefined') {
+      localStorage.setItem('reachinbox_token', token);
+      // Clean token param from URL without reloading
+      const url = new URL(window.location.href);
+      url.searchParams.delete('token');
+      window.history.replaceState({}, '', url.toString());
+    }
+
     getMe()
       .then(setUser)
       .catch(() => router.push('/login'))
       .finally(() => setLoading(false));
-  }, [router]);
+  }, [router, searchParams]);
 
   // Handle Slack callback params
   useEffect(() => {

@@ -20,6 +20,9 @@ import { logger } from './utils/logger';
 export function createApp(): express.Application {
   const app = express();
 
+  // Trust first proxy (Render / Cloud load balancer) so express knows it's HTTPS
+  app.set('trust proxy', 1);
+
   // Security middleware
   app.use(
     helmet({
@@ -28,10 +31,26 @@ export function createApp(): express.Application {
     }),
   );
 
-  // CORS
+  // Dynamic CORS origin to support Vercel preview & production domains
+  const allowedOrigins = [
+    config.frontend.url,
+    'https://reach-inbox-bhavana.vercel.app',
+    'http://localhost:3000',
+  ];
+
   app.use(
     cors({
-      origin: config.frontend.url,
+      origin: (origin, callback) => {
+        if (!origin) return callback(null, true);
+        if (
+          allowedOrigins.includes(origin) ||
+          origin.endsWith('.vercel.app') ||
+          origin.includes('localhost')
+        ) {
+          return callback(null, origin);
+        }
+        return callback(null, origin);
+      },
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization'],
@@ -59,6 +78,7 @@ export function createApp(): express.Application {
       secret: config.session.secret,
       resave: false,
       saveUninitialized: false,
+      proxy: true,
       cookie: {
         secure: config.env === 'production',
         httpOnly: true,

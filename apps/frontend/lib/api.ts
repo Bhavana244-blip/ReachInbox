@@ -6,10 +6,19 @@ async function fetchAPI<T>(
 ): Promise<T> {
   const url = `${API_BASE}${endpoint}`;
 
+  let authHeaders: Record<string, string> = {};
+  if (typeof window !== 'undefined') {
+    const token = localStorage.getItem('reachinbox_token');
+    if (token) {
+      authHeaders = { Authorization: `Bearer ${token}` };
+    }
+  }
+
   const res = await fetch(url, {
     credentials: 'include',
     headers: {
       'Content-Type': 'application/json',
+      ...authHeaders,
       ...options.headers,
     },
     ...options,
@@ -41,14 +50,21 @@ export async function getMe() {
 }
 
 export async function logout() {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('reachinbox_token');
+  }
   return fetchAPI('/auth/logout', { method: 'POST' });
 }
 
 export async function devLogin(email?: string, name?: string) {
-  return fetchAPI<{ message: string; user: any }>('/auth/dev-login', {
+  const res = await fetchAPI<{ message: string; user: any }>('/auth/dev-login', {
     method: 'POST',
     body: JSON.stringify({ email, name }),
   });
+  if (res?.user?.id && typeof window !== 'undefined') {
+    localStorage.setItem('reachinbox_token', res.user.id);
+  }
+  return res;
 }
 
 export function getGoogleLoginUrl() {
