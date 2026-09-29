@@ -1,0 +1,23 @@
+{
+  "name": "reachinbox-email-scheduler",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Production-grade email scheduler service with BullMQ, Redis, Elasticsearch, and a polished Next.js dashboard",
+  "scripts": {
+    "dev:backend": "cd apps/backend && npm run dev",
+    "dev:frontend": "cd apps/frontend && npm run dev",
+    "dev:worker": "cd apps/backend && npm run dev:worker",
+    "build:backend": "cd apps/backend && npm run build",
+    "build:frontend": "cd apps/frontend && npm run build",
+    "db:migrate": "cd apps/backend && npx prisma migrate dev",
+    "db:generate": "cd apps/backend && npx prisma generate",
+    "db:push": "cd apps/backend && npx prisma db push",
+    "docker:up": "docker compose -f docker/docker-compose.yml up -d",
+    "docker:down": "docker compose -f docker/docker-compose.yml down",
+    "test": "cd apps/backend && npm test",
+    "lint": "echo 'Run lint in each app'"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
